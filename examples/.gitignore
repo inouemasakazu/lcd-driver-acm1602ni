@@ -1,0 +1,79 @@
+# ===== Build artifacts =====
+
+Debug/
+Release/
+build/
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+
+# ===== STM32CubeIDE / Eclipse =====
+
+.metadata/
+.settings/
+
+# CDT generated
+
+*.d
+*.o
+*.su
+
+# ===== CubeMX =====
+
+# 自動生成コードは残すが一時ファイルは除外
+
+*.tmp
+*.bak
+
+# ===== Logs =====
+
+*.log
+
+# ===== OS =====
+
+.DS_Store
+Thumbs.db
+
+# ===== VSCode =====
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/c_cpp_properties.json
+!.vscode/tasks.json
+
+# デバッグ設定は環境依存になりやすいので必要なら有効化
+
+# !.vscode/launch.json
+
+# ===== Debug launch configs（任意共有）=====
+
+# 共有する場合はコメントアウト解除
+
+# *.launch
+
+# ===== Python / tools（CubeMX裏で使われることあり）=====
+
+**pycache**/
+*.pyc
+
+# ===== Temporary / backup =====
+
+*~
+*.swp
+*.swo
+
+# ===== User-specific =====
+
+*.user
+*.workspace
+
+# ===== Keep important files =====
+# 以下は除外しない
+
+!.project
+!.cproject
+!*.ioc
+!*.ld
+!startup_*.s
