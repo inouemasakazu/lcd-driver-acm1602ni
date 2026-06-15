@@ -40,8 +40,8 @@ lcd-driver-acm1602ni/
 | API                          | brief                                       |
 | :--------------------------- |---------------------------------------------|
 | acm1602ni_init               | ACM1602NI初期化                              |
-| acm1602ni_write_string_at    | 指定した行列位置を起点に文字列の書き込みを行う。 |
 | acm1602ni_write_string       | 現在の行列位置から文字列の書き込みを行う。      |
+| acm1602ni_write_string_at    | 指定した行列位置を起点に文字列の書き込みを行う。 |
 | acm1602ni_move_ddram_address | DDRAM ADDRESS位置移動                        |
 | acm1602ni_command            | コマンド設定                                 |
 

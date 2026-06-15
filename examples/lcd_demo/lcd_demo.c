@@ -35,7 +35,7 @@ extern I2C_HandleTypeDef hi2c1;
 /****************************************************************************************************
  * Private Prototype Declaration
  ****************************************************************************************************/
-static int lcd_send_cb(uint8_t address, uint8_t *pData, uint32_t length, uint32_t wait);
+static int lcd_send_cb(uint8_t address, const uint8_t *pData, uint32_t length, uint32_t wait);
 
 /**
  * @brief LCDモジュールのデモ表示
@@ -57,10 +57,10 @@ void lcd_demo(void)
  * @param length  送信データの長さ
  * @param wait    送信完了後の待ち
  */
-static int lcd_send_cb(uint8_t address, uint8_t *pData, uint32_t length, uint32_t wait)
+static int lcd_send_cb(uint8_t address, const uint8_t *pData, uint32_t length, uint32_t wait)
 {
     /* 送信実行 */
-    HAL_I2C_Master_Transmit(&hi2c1, ((uint16_t)address), pData, length, 1000);
+    HAL_I2C_Master_Transmit(&hi2c1, ((uint16_t)address), ((uint8_t *)pData), length, 1000);
 
     HAL_Delay(wait);
 

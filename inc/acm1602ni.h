@@ -13,15 +13,14 @@
  * Public include
  ****************************************************************************************************/
 #include "stdint.h"
-#include "stdbool.h"
 
 /****************************************************************************************************
  * Public define
  ****************************************************************************************************/
 
 /*** 表示可能領域(2x16) ***/
-#define ACM1602NI_LINE_MAX               2      /* 列数 */
-#define ACM1602NI_COLUMN_MAX            16      /* 行数 */
+#define ACM1602NI_LINE_MAX               2      /* 行数 */
+#define ACM1602NI_COLUMN_MAX            16      /* 列数 */
 
 
 /*** Instructions ***/
@@ -60,6 +59,13 @@
 #define COMMAND_DDRAM_SET               (INSTRUCTIONS_DDRAM)
 
 
+/*** 処理結果 ***/
+#define ACM1602NI_OK         0
+#define ACM1602NI_NG         1
+
+#define ACM1602NI_ERROR_ARG     -1
+#define ACM1602NI_ERROR_CB      -2
+
 /****************************************************************************************************
  * Public typedef
  ****************************************************************************************************/
@@ -71,7 +77,7 @@
  * @param length  送信データの長さ
  * @param wait    送信完了後の待ち
  */
-typedef int (*i2c_cb_t)(uint8_t address, uint8_t *pData, uint32_t length, uint32_t wait);
+typedef int (*i2c_cb_t)(uint8_t address, const uint8_t *pData, uint32_t length, uint32_t wait);
 
 /****************************************************************************************************
  * Public Variables
@@ -88,19 +94,19 @@ typedef int (*i2c_cb_t)(uint8_t address, uint8_t *pData, uint32_t length, uint32
 int acm1602ni_init(i2c_cb_t callback);
 
 /**
+ * @brief 現在の行列位置から文字列の書き込みを行う。
+ *        行列位置の終端に到達した場合は先頭位置に循環する。
+ * @param string 文字列のメモリ領域
+ */
+int acm1602ni_write_string(const char *string);
+
+/**
  * @brief 指定した行列位置を起点に文字列の書き込みを行う。
  * @param string 文字列のメモリ領域
  * @param line   行位置
  * @param column 列位置
  */
 int acm1602ni_write_string_at(const char *string, uint16_t line, uint16_t column);
-
-/**
- * @brief 現在の行列位置から文字列の書き込みを行う。
- *        行列位置の終端に到達した場合は先頭位置に循環する。
- * @param string 文字列のメモリ領域
- */
-int acm1602ni_write_string(const char *string);
 
 /**
  * @brief DDRAM ADDRESS位置移動
@@ -114,13 +120,6 @@ int acm1602ni_move_ddram_address(uint16_t line, uint16_t column);
  *        ACM1602NIの制御状態を指示するコマンドを設定する
  * @param command コマンドコード
  */
-void acm1602ni_command(uint8_t command);
+int acm1602ni_command(uint8_t command);
 
 #endif  /* __ACM1602NI_H__ */
-
-
-
-
-
-
-

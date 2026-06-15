@@ -12,7 +12,7 @@
  ****************************************************************************************************/
 #include "acm1602ni.h"
 
-#include <string.h>
+#include <stddef.h>
 
 /****************************************************************************************************
  * Private define
@@ -27,7 +27,7 @@
 /*** CONTROL BYTE ***/
 #define RS_BIT                  0x80        /* b[7] 0:command / 1:RAM DATA  */
 
-#define CONTROL_BYTE_COMMAND    (~RS_BIT & RS_BIT)
+#define CONTROL_BYTE_COMMAND    (0x00)
 #define CONTROL_BYTE_RAMDATA    (RS_BIT)
 
 
@@ -49,7 +49,7 @@ typedef struct
  ****************************************************************************************************/
 
 /*** DDRAM ADDRESS(2x16) ***/
-static uint8_t s_matrix_ddram_address[DDRAM_LINE_SIZE][DDRAM_COLUMN_SIZE] = {
+static const uint8_t s_matrix_ddram_address[DDRAM_LINE_SIZE][DDRAM_COLUMN_SIZE] = {
     { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
     { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F }
 };
@@ -61,7 +61,7 @@ static acm1602ni_if_t acm1602ni_if;
  ****************************************************************************************************/
 
 /*** Low Level Layer function ***/
-static int acm1602ni_send_i2c(uint8_t *data, uint32_t wait);
+static int acm1602ni_send_i2c(const uint8_t *data, uint32_t wait);
 
 /**
  * @brief ACM1602NI初期化
@@ -70,12 +70,12 @@ static int acm1602ni_send_i2c(uint8_t *data, uint32_t wait);
  */
 int acm1602ni_init(i2c_cb_t callback)
 {
-    int result = 0;
+    int success = ACM1602NI_OK;
 
     if (callback == NULL)
     {
         /* コールバックない場合はドライバ利用不可 */
-        result = -1;
+        success = ACM1602NI_ERROR_CB;
     }
     else
     {
@@ -96,7 +96,43 @@ int acm1602ni_init(i2c_cb_t callback)
         acm1602ni_command(COMMAND_DISPLAY_CLEAR);
     }
 
-    return result;
+    return success;
+}
+
+/**
+ * @brief 現在の行列位置から文字列の書き込みを行う。
+ *        行列位置の終端に到達した場合は先頭位置に循環する。
+ * @param string 文字列のメモリ領域
+ */
+int acm1602ni_write_string(const char *string)
+{
+    int success = ACM1602NI_OK;
+    uint8_t buf[2] = {0};
+
+    buf[0] = CONTROL_BYTE_RAMDATA;
+
+    if (string == NULL)
+    {
+        /* 引数異常 */
+        success = ACM1602NI_ERROR_ARG;
+    }
+    else
+    {
+        while (*string != '\0')
+        {
+            buf[1] = *string++;
+
+            /* RAM DATA送信 */
+            success = acm1602ni_send_i2c(buf, 1);
+            if (success == ACM1602NI_ERROR_CB)
+            {
+                /* 送信コールバック未登録 */
+                break;
+            }
+        }
+    }
+
+    return success;
 }
 
 /**
@@ -111,18 +147,18 @@ int acm1602ni_write_string_at(const char *string, uint16_t line, uint16_t column
 
     if (string == NULL)
     {
-        /* param error */
-        success = -1;
+        /* 引数異常 */
+        success = ACM1602NI_ERROR_ARG;
     }
     else
     {
         /* 描画位置更新 */
         success = acm1602ni_move_ddram_address(line, column);
-        if (success == 0)
+        if (success == ACM1602NI_OK)
         {
             /* 文字列書き込み */
             success = acm1602ni_write_string(string);
-            if (success == 1)
+            if (success == ACM1602NI_ERROR_CB)
             {
                 /* 送信コールバック未登録 */
             }
@@ -130,7 +166,7 @@ int acm1602ni_write_string_at(const char *string, uint16_t line, uint16_t column
         else
         {
             /* 書き込み位置の不正 */
-            success = -2;
+            success = ACM1602NI_NG;
         }
     }
 
@@ -138,75 +174,43 @@ int acm1602ni_write_string_at(const char *string, uint16_t line, uint16_t column
 }
 
 /**
- * @brief 現在の行列位置から文字列の書き込みを行う。
- *        行列位置の終端に到達した場合は先頭位置に循環する。
- * @param string 文字列のメモリ領域
- */
-int acm1602ni_write_string(const char *string)
-{
-    int success = 0;
-    uint8_t buf[2] = {0};
-
-    buf[0] = CONTROL_BYTE_RAMDATA;
-
-    if (string == NULL)
-    {
-        success = -1;
-    }
-    else
-    {
-        while (*string != '\0')
-        {
-            buf[1] = *string++;
-
-            /* 送信実行 */
-            success = acm1602ni_send_i2c(buf, 1);
-            if (success == 1)
-            {
-                /* 送信コールバック未登録 */
-                break;
-            }
-        }
-    }
-
-    return success;
-}
-
-/**
- * @brief DDRAMアドレス位置の移動
- * @param x DDRAMの行
- * @param y DDRAMの列
+ * @brief DDRAM ADDRESS位置移動
+ * @param line   移動する行位置
+ * @param column 移動する列位置
  * @return 処理結果
  */
-int acm1602ni_move_ddram_address(uint16_t x, uint16_t y)
+int acm1602ni_move_ddram_address(uint16_t line, uint16_t column)
 {
-    int result = 0;
+    int success = ACM1602NI_OK;
 
-    if ((x < DDRAM_LINE_SIZE) && (y < DDRAM_COLUMN_SIZE))
+    if ((line < DDRAM_LINE_SIZE) && (column < DDRAM_COLUMN_SIZE))
     {
         uint8_t command = 0;
 
         command = COMMAND_DDRAM_SET;
-        command = command | s_matrix_ddram_address[x][y];
+        command = command | s_matrix_ddram_address[line][column];
 
         /* DDRAM ADDRESS位置の移動 */
-        acm1602ni_command(command);
+        success = acm1602ni_command(command);
     }
     else
     {
         /* DDRAM ADDRESSの指定可能範囲外 */
-        result = -1;
+        success = ACM1602NI_ERROR_ARG;
     }
 
-    return result;
+    return success;
 }
 
 /**
- * @brief コマンド設定処理
- * @param command ACM1602NIに送信するコマンド内容(Instructions Code)
+ * @brief コマンド設定
+ *        ACM1602NIの制御状態を指示するコマンドを設定する
+ * @param command コマンドコード
  */
-void acm1602ni_command(uint8_t command)
+int acm1602ni_command(uint8_t command)
 {
+    int success = ACM1602NI_OK;
+
     uint8_t buf[2] = {0};
     uint32_t wait = 1;      /* wait[ms] */
 
@@ -235,28 +239,32 @@ void acm1602ni_command(uint8_t command)
         wait = 1;               /* wait 53us */
     }
 
-    acm1602ni_send_i2c(buf, wait);
+    /* command送信 */
+    success = acm1602ni_send_i2c(buf, wait);
+
+    return success;
 }
 
 /**
  * @brief I2C送信処理
  * @param data デバイスに送信するデータ(文字 or コマンド)
- * @param wait 送信処理実行後の待ち時間
+ * @param wait 送信実行後の待ち時間
+ * @return 処理結果
  */
-static int acm1602ni_send_i2c(uint8_t *data, uint32_t wait)
+static int acm1602ni_send_i2c(const uint8_t *data, uint32_t wait)
 {
-    int result = 0;
+    int success = ACM1602NI_OK;
 
     if (acm1602ni_if.i2c_cb != NULL)
     {
-        /* 送信実行 */
-        acm1602ni_if.i2c_cb(SLAVE_WRITE, data, 2, wait);
+        /* 送信コールバック実行 */
+        success = acm1602ni_if.i2c_cb(SLAVE_WRITE, data, 2, wait);
     }
     else
     {
         /* 送信コールバック未登録 */
-        result = 1;
+        success = ACM1602NI_ERROR_CB;
     }
 
-    return result;
+    return success;
 }
