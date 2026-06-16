@@ -13,6 +13,7 @@
  * Public include
  ****************************************************************************************************/
 #include "stdint.h"
+#include "stdbool.h"
 
 /****************************************************************************************************
  * Public define
@@ -23,45 +24,9 @@
 #define ACM1602NI_COLUMN_MAX            16      /* 列数 */
 
 
-/*** Instructions ***/
-#define INSTRUCTIONS_CLEAR              0x01        /* Clear Display */
-#define INSTRUCTIONS_HOME               0x02        /* Return Home */
-#define INSTRUCTIONS_ENTRY_MODE         0x04        /* Entry Mode Set */
-#define INSTRUCTIONS_DISPLAY_CONTROL    0x08        /* Display ON/OFF Control */
-#define INSTRUCTIONS_SHIFT              0x10        /* Cursor or Display Shift */
-#define INSTRUCTIONS_FUNCTION           0x20        /* Function Set */
-#define INSTRUCTIONS_CGRAM              0x40        /* Set CGRAM Address */
-#define INSTRUCTIONS_DDRAM              0x80        /* Set CDDAM Address */
-
-/*** command ***/
-#define COMMAND_DISPLAY_CLEAR           (INSTRUCTIONS_CLEAR)                    /* 表示を全消去 */
-#define COMMAND_DISPLAY_HOME            (INSTRUCTIONS_HOME)                     /* カーソル位置をDDRAMの00Hに移動 */
-
-/* 文字入力後のカーソル移動方向 */
-#define COMMAND_DISPLAY_NONE            (INSTRUCTIONS_ENTRY_MODE | 0x00)        /* 表示のシフト有無：無し */
-#define COMMAND_DISPLAY_RIGHT           (INSTRUCTIONS_ENTRY_MODE | 0x01)        /* 表示のシフト有無：右シフトあり */
-#define COMMAND_DISPLAY_LEFT            (INSTRUCTIONS_ENTRY_MODE | 0x03)        /* 表示のシフト有無：左シフトあり */
-
-#define COMMAND_DISPLAY_ON              (INSTRUCTIONS_DISPLAY_CONTROL | 0x04)   /* 表示ON  */
-#define COMMAND_DISPLAY_OFF             (INSTRUCTIONS_DISPLAY_CONTROL | 0x00)   /* 表示OFF */
-
-#define COMMAND_CURSOR_ON               (INSTRUCTIONS_DISPLAY_CONTROL | 0x06)   /* カーソル "_" 表示 */
-#define COMMAND_CURSOR_BLINK_ON         (INSTRUCTIONS_DISPLAY_CONTROL | 0x07)   /* カーソル "_" 表示+点滅 */
-#define COMMAND_CURSOR_OFF              (INSTRUCTIONS_DISPLAY_CONTROL | 0x04)   /* カーソル "_" 非表示 */
-
-#define COMMAND_CURSOR_MOVE_RIGHT       (INSTRUCTIONS_SHIFT | 0x04)             /* カーソルを右に移動 */
-#define COMMAND_CURSOR_MOVE_LEFT        (INSTRUCTIONS_SHIFT | 0x00)             /* カーソルを左に移動 */
-
-#define COMMAND_SCREEN_MOVE_RIGHT       (INSTRUCTIONS_SHIFT | 0x0C)             /* 画面位置を右に移動(DDRAMごとずらす) */
-#define COMMAND_SCREEN_MOVE_LEFT        (INSTRUCTIONS_SHIFT | 0x08)             /* 画面位置を左に移動(DDRAMごとずらす) */
-
-#define COMMAND_CGRAM_SET               (INSTRUCTIONS_CGRAM)
-#define COMMAND_DDRAM_SET               (INSTRUCTIONS_DDRAM)
-
-
 /*** 処理結果 ***/
-#define ACM1602NI_OK         0
-#define ACM1602NI_NG         1
+#define ACM1602NI_OK            0
+#define ACM1602NI_NG            1
 
 #define ACM1602NI_ERROR_ARG     -1
 #define ACM1602NI_ERROR_CB      -2
@@ -108,18 +73,47 @@ int acm1602ni_write_string(const char *string);
  */
 int acm1602ni_write_string_at(const char *string, uint16_t line, uint16_t column);
 
+
+/*** 画面状態制御用API ***/
+
 /**
- * @brief DDRAM ADDRESS位置移動
+ * @brief LCD画面の表示内容をすべて消す
+ */
+int acm1602ni_display_clear(void);
+
+/**
+ * @brief LCD画面の表示をONにする
+ */
+int acm1602ni_display_on(void);
+
+/**
+ * @brief LCD画面の表示をOffにする
+ */
+int acm1602ni_display_off(void);
+
+/**
+ * @brief LCD画面にカーソル"_"を表示する
+ * @param is_blink カーソルの点滅設定
+ */
+int acm1602ni_cursor_on(bool is_blink);
+
+/**
+ * @brief LCD画面にカーソル"_"を非表示にする
+ */
+int acm1602ni_cursor_off(void);
+
+/**
+ * @brief LCD画面にカーソル"_"を行列の0番目に移動する
+ */
+int acm1602ni_cursor_home(void);
+
+/**
+ * @brief LCD画面上のカーソル"_"位置と文字列の書き込み位置移動
+ *        カーソルの表示有無にかかわらず、APIの実行後は指定した位置より文字列の書き込みが行われる
  * @param line   移動する行位置
  * @param column 移動する列位置
  */
-int acm1602ni_move_ddram_address(uint16_t line, uint16_t column);
+int acm1602ni_cursor_move(uint16_t line, uint16_t column);
 
-/**
- * @brief コマンド設定
- *        ACM1602NIの制御状態を指示するコマンドを設定する
- * @param command コマンドコード
- */
-int acm1602ni_command(uint8_t command);
 
 #endif  /* __ACM1602NI_H__ */
