@@ -8,10 +8,10 @@
 5. [備考](#備考)
 
 ## 概要
-LCDデバイス「ACM1602NI-FLW-FBW-M01」に対応するデバイスドライバについて記載する。  
+LCDデバイスの「ACM1602NI-FLW-FBW-M01」に対応したデバイスドライバモジュールです。  
 
-本ドライバは「ACM1602NI-FLW-FBW-M01」の制御機能を抽象化し文字列の表示に特化したモジュールとして提供する。  
-なお、マイコン-LCDデバイス間の通信IFについては本モジュールの責務外としている。  
+このモジュールは「ACM1602NI-FLW-FBW-M01」の固有ロジックを内部処理とし隠蔽し、  
+外部公開するAPIの操作のみで文字列の表示を可能としています。  
 
 
 ## ディレクトリ構成
@@ -42,13 +42,10 @@ lcd-driver-acm1602ni/
 | acm1602ni_init               | ACM1602NI初期化                              |
 | acm1602ni_write_string       | 現在の行列位置から文字列の書き込みを行う。      |
 | acm1602ni_write_string_at    | 指定した行列位置を起点に文字列の書き込みを行う。 |
-| acm1602ni_move_ddram_address | DDRAM ADDRESS位置移動                        |
-| acm1602ni_command            | コマンド設定                                 |
 
 
 ## 使用例
-以下の文字列を表示するコード例を示す。  
-なお、本モジュールでは送信IF機能(I2C処理)はサポートしないため、環境に応じて利用者が定義すること。  
+「ACM1602NI-FLW-FBW-M01」に文字列を表示する実装例です。  
 
 ![acm1602_demo](docs/images/acm1602_demo.jpg)
 
@@ -98,12 +95,3 @@ static int lcd_send_cb(uint8_t address, uint8_t *pData, uint32_t length, uint32_
 
 ## 備考
 表示バッファ管理機能(内部バッファの追加、バッファ管理・文字列編集・表示更新実行等...)を追加予定...  
-
-<!-- 
-フェーズ2設計・実装案
-```text
-void acm1602ni_buffer_set_text(const char *txet, uint16_t line);
-void acm1602ni_buffer_insert_text(const char *txet, uint16_t line, uint16_t position);
-void acm1602ni_buffer_write()
-```
--->
