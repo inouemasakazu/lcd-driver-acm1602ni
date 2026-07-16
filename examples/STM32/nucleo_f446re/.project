@@ -33,7 +33,7 @@
 		<link>
 			<name>src</name>
 			<type>2</type>
-			<location>D:/workspace/STM32/f446re/project/lcd-driver-acm1602ni/src</location>
+			<location>D:/workspace/repo/lcd-driver-acm1602ni/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>
