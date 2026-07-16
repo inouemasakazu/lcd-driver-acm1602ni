@@ -1,0 +1,11 @@
+../LCD/if/if_lcd.c:43:13:iLcd_writeData	1
+../LCD/if/if_lcd.c:64:6:iLcd_writeDisplay	2
+../LCD/if/if_lcd.c:91:6:iLcd_writeControl	1
+../LCD/if/if_lcd.c:112:6:iLcd_moveDDramAddress	4
+../LCD/if/if_lcd.c:140:6:iLcd_displayClear	1
+../LCD/if/if_lcd.c:155:6:iLcd_displayHome	1
+../LCD/if/if_lcd.c:170:6:iLcd_setEntryMode	1
+../LCD/if/if_lcd.c:205:6:iLcd_setOnOffControl	1
+../LCD/if/if_lcd.c:242:6:iLcd_setCursorShift	1
+../LCD/if/if_lcd.c:279:6:iLcd_setFunction	1
+../LCD/if/if_lcd.c:314:6:iLcd_backLightControl	1
